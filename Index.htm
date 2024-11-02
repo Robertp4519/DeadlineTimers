@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Timers Prototype</title>
+<style>
+</style>
+<script src="Index.js" defer></script>
+</head>
+<body onload="main()">
+    <!-- TODO: Create documentation for this document -->
+    <form name="newTimerForm" id="newTimerForm" onsubmit="return newTimer();">
+        <label>Timer End Date</label>
+        <input type="date" id="date" name="date">
+        <label>Timer End Time</label>
+        <input type="time" id="time" name="time">
+        <label>Timer Label</label>
+        <input type="text" id="text" name="text">
+        <input type="submit">
+    </form>
+    <table>
+        <tbody id="timersTable">
+        <tr><td>Timer</td><td>Label describing what timer is for</td></tr>
+        </tbody>
+    </table>
+</body>
+</html>
