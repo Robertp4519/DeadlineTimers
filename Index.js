@@ -1,10 +1,13 @@
-// Retrostorm        Started: 10/30/24      Updated: 11/7/24
+// Retrostorm        Started: 10/30/24      Updated: 11/8/24
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
 
-// TODO: May be more efficient to store ticking time of timers in timers object so don't
-// have to constantly read in values and convert them.
+// TODO: Create a function that generates our ticking time, modify newTimer to save that value
+// in our new timer, modify displayTimer() to take timer object and use for ticking time and timer label. 
+
+// TODO: Implement using tickingTime from timer objects when ticking timers
+// and other times when time is needed. 
 
 // TODO: Change back displayTimer() when done debugging. 
 // displayTimer() will currently always give a display of 1 second,
@@ -17,9 +20,11 @@
 
 // ______________________________________________________________________________________________________________
 
-// Timers stored as timer#: [startDateTime, endDateTime, timerLabel]
+// Timers stored as timer#: {name, startDateTime, endDateTime, label, timeArray[days, hours, minutes, seconds]}
 // Note: timerNum is converted to string when used as property, # represents a unique timer number 0, 1, 2, ...
-// each timers property name is "timer" + String(timerNum) ie. timer0 or timer1
+// each timers property name is "timer" + String(timerNum) ie. timer0 or timer1. Also, each timer is stored
+// as a timer object which is what curly brackets represent. 
+
 let timers = {};
 
 // When implement reloading, would want to set timerNum to highest identification number of loaded in timers
@@ -27,6 +32,15 @@ let timerNum = 0;
 
 // Form for creating new timer
 const newTimerForm = document.getElementById("newTimerForm");
+
+// Constructor function for individual timer
+function Timer(timerNum, startDateTime, endDateTime, timerLabel, timerArray = [0, 0, 0, 0]) {
+    this.name = "timer" + String(timerNum);
+    this.startDateTime = startDateTime;
+    this.endDateTime = endDateTime;
+    this.label = timerLabel;
+    this.tickingTime = timerArray;
+}
 
 function main() {
     // TODO: Clean up the documentation on this function
@@ -49,7 +63,7 @@ function main() {
 
 function newTimer() {
     // Function takes in user input from newTimerForm and 
-    // creates new property in timers for with values from the form.
+    // stores new timer object as a property of timers.
     // Finally, calls displayTimer() to display the newly created/stored timer.
 
     // TODO: Clean up documentation for this function
@@ -57,12 +71,8 @@ function newTimer() {
     // New timer name, will get used often
     let currentTimer = "timer" + String(timerNum);
 
-    // Create new timer property as an empty list
-    timers[currentTimer] = [];
-
     // Gets current date and stores in new timer
     const currentDateTime = new Date(Date.now());
-    timers[currentTimer][0] = currentDateTime;
 
     // Gets end date entered by user
     let endDate = newTimerForm.elements["date"].value;
@@ -87,15 +97,22 @@ function newTimer() {
     // Sets hours and minutes of endDate using first two and last two digits of endTime
     endDate.setHours(parseInt(endTime.slice(0, 3)), parseInt(endTime.slice(3)));
 
-    // Stores end date in new timer
-    timers[currentTimer][1] = endDate;
+    // Gets label entered by user
+    const label = newTimerForm.elements["text"].value;
 
-    // Gets label entered by user and stores in new timer
-    label = newTimerForm.elements["text"].value;
-    timers[currentTimer][2] = label;
+    // Creates new timer object using currentTimer, currentDateTime, endDate, and label
+    const timer = new Timer(currentTimer, currentDateTime, endDate, label);
+
+    // Adds new timer to timers object accessible with its name
+    timers[timer.name] = timer;
 
     // Calls displayTimer() so new timer will be displayed in the timer table
-    displayTimer(timerNum, currentTimer);
+    displayTimer(timerNum, timer.name);
+
+    // FIXME: Workaround solution to store ticking time using the display time created by displayTimer()
+    // Will want to create function that calculates ticking time like displayTimer does now then call and store that
+    // then call modified displayTimer() with time we have stored in timer object. 
+    timers[timer.name]["tickingTime"] = getTimerDisplayTime(document.getElementById("timeDisplay" + String(timerNum)).innerHTML);
 
     // Increments timerNum so each timer's number is unique and so we can loop through timers later
     timerNum++;
@@ -110,6 +127,8 @@ function newTimer() {
 }
 
 function getTimerDisplayTime(display) {
+    // display refrences the innerHTML of a timerDisplay# for some reason
+    
     // TODO: Write documentation for this function
     // and clean up code organization. Want to 
     // split by action we're doing rather than by 
@@ -243,7 +262,7 @@ function tickTimers() {
 
         let isPositive = true;
 
-        // Iterate over each item in the array
+        // Iterate over each item in the array, isPositive is false if any element is negative
         for (let j = 0; j < timeArray.length; j++ ) {
             if (timeArray[j] <= 0) {
                 isPositive = false;
@@ -293,7 +312,7 @@ function displayTimer(givenTimerNum, timerName) {
     const newTimerRow = document.createElement("tr");
     newTimerRow.id = timerName;
     displayTable.appendChild(newTimerRow);
-    document.getElementById(timerName).innerHTML = "<td id='timeDisplay" + String(givenTimerNum) + "'>" + formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]) + "</td><td>" + timers[timerName][2] + "</td>";
+    document.getElementById(timerName).innerHTML = "<td id='timeDisplay" + String(givenTimerNum) + "'>" + formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]) + "</td><td>" + timers[timerName]["label"] + "</td>";
 }
 
 function divideUpTime(millisecondTime) {
