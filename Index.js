@@ -1,10 +1,12 @@
-// Retrostorm        Started: 10/30/24      Updated: 11/1/24
+// Retrostorm        Started: 10/30/24      Updated: 11/7/24
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
 
-// FIXME: negativeTickTimer() sets seconds equal to positive nine after reaching negative ten.
-// Check tickTimers() for more information on fixme. Also
+// TODO: May be more efficient to store ticking time of timers in timers object so don't
+// have to constantly read in values and convert them.
+
+// TODO: Change back displayTimer() when done debugging. 
 // displayTimer() will currently always give a display of 1 second,
 // this was for debugging tickTimers(). Change when done debugging.
 
@@ -32,7 +34,7 @@ function main() {
     // Calls function that ticks timers each second IE 1000 milliseconds
     setInterval(tickTimers, 1000);
 
-    // Depreceated code, could likely delete
+    // Deprecated code, could likely delete
 
     //let started = false;
     //while (started != true) {
@@ -114,28 +116,41 @@ function getTimerDisplayTime(display) {
     // unit of time.
 
     let secondsIndex = display.lastIndexOf("s");
-    let seconds = display.slice(secondsIndex - 2, secondsIndex);
-    if (seconds[0] == " ") {
-        seconds = seconds[1];
-    }
+    let seconds = display.slice(secondsIndex - 3, secondsIndex);
+    if (seconds[1] == " ") {
+        // (c #) case where c is any char and # is a number
+        seconds = seconds[2];
+    } else if (seconds[0] == " ") {
+        // ( ##) or ( -#) case where c is any char and # is a number
+        seconds = seconds[1] + seconds[2]
+    } // Omitted else case where (-##)
     seconds = parseInt(seconds);
 
     let minutesIndex = display.lastIndexOf("m");
-    let minutes = display.slice(minutesIndex - 2, minutesIndex);
-    if (minutes[0] == " ") {
-        minutes = minutes[1];
-    }
+    let minutes = display.slice(minutesIndex - 3, minutesIndex);
+    if (minutes[1] == " ") {
+        // (c #) case where c is any char and # is a number
+        minutes = minutes[2];
+    } else if (minutes[0] == " ") {
+        // ( ##) or ( -#) case where c is any char and # is a number
+        minutes = minutes[1] + minutes[2]
+    } // Omitted else case where (-##)
     minutes = parseInt(minutes);
 
     let hoursIndex = display.lastIndexOf("h");
-    let hours = display.slice(hoursIndex - 2, hoursIndex);
-    if (hours[0] == " ") {
-        hours = hours[1];
-    }
+    let hours = display.slice(hoursIndex - 3, hoursIndex);
+    if (hours[1] == " ") {
+        // (c #) case where c is any char and # is a number
+        hours = hours[2];
+    } else if (hours[0] == " ") {
+        // ( ##) or ( -#) case where c is any char and # is a number
+        hours = hours[1] + hours[2]
+    } // Omitted else case where (-##)
     hours = parseInt(hours);
 
-    let daysIndex = display.lastIndexOf("d");
+    let daysIndex = display.indexOf("d");
     let days = display.slice(0, daysIndex);
+    // Days will always be start of display string up to the index of d
     days = parseInt(days);
 
     return [days, hours, minutes, seconds]
@@ -185,9 +200,13 @@ function negativeTickTimer(timeArray) {
     // why I care if decrementing goes beyond 59 or 24.
 
     let days = timeArray[0];
+    console.log(days)
     let hours = timeArray[1];
+    console.log(hours)
     let minutes = timeArray[2];
+    console.log(minutes)
     let seconds = timeArray[3];
+    console.log(seconds)
 
     if (seconds - 1 < -59) {
         seconds = 0;
@@ -212,7 +231,7 @@ function negativeTickTimer(timeArray) {
 function tickTimers() {
     // TODO: Finish to actually tick our timers down
 
-    //console.log("AHHHHH");
+    // console.log("AHHHHH");
     // console.log(Date.now());
 
     // Could replace with for each loop that goes through timers object.
@@ -222,18 +241,19 @@ function tickTimers() {
         let innerDisplay = timeDisplay.innerHTML;
         let timeArray = getTimerDisplayTime(innerDisplay);
 
-        let sum = 0;
+        let isPositive = true;
 
         // Iterate over each item in the array
         for (let j = 0; j < timeArray.length; j++ ) {
-        sum += timeArray[j];
+            if (timeArray[j] <= 0) {
+                isPositive = false;
+                break;
+            } else {
+                continue;
+            }
         }
 
-        // FIXME: positive seems to work as expected though haven't tested hours or days really,
-        // negative seems to reset to positive numbers once seconds becomes -10 for some reason.
-        // NOTE: Mess with timeTillEnd in displayTimer to test specific times. IE 1000 for 1 second and 0 everything else.
-
-        if (sum > 0) {
+        if (isPositive) {
             timeArray = positiveTickTimer(timeArray);
         } else {
             timeArray = negativeTickTimer(timeArray);
@@ -249,7 +269,7 @@ function tickTimers() {
 }
 
 function formatDate(day, hr, min, s) {
-    //TODO: Change format for days, hours, and minutes to 
+    // TODO: Change format for days, hours, and minutes to 
     // be day, hr, min if these == 1 otherwise use plural form
 
     // Returns #days, #hrs, #min, #s
@@ -264,7 +284,7 @@ function displayTimer(givenTimerNum, timerName) {
     // let timeTillOver = timers[timerName][1] - currentDateTime;
     let timeTillOver = 1000;
 
-    //takes a rounded down amount of time from the total time to generate an accurate picture of how long in days, hours, mins, and secs
+    // takes a rounded down amount of time from the total time to generate an accurate picture of how long in days, hours, mins, and secs
     timeTillOver = divideUpTime(timeTillOver);
     // console.log(formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]));
 
