@@ -1,10 +1,7 @@
-// Retrostorm        Started: 10/30/24      Updated: 11/8/24
+// Retrostorm        Started: 10/30/24      Updated: 11/26/24
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
-
-// TODO: Create a function that generates our ticking time, modify newTimer to save that value
-// in our new timer, modify displayTimer() to take timer object and use for ticking time and timer label. 
 
 // TODO: Implement using tickingTime from timer objects when ticking timers
 // and other times when time is needed. 
@@ -106,13 +103,12 @@ function newTimer() {
     // Adds new timer to timers object accessible with its name
     timers[timer.name] = timer;
 
+    // Calls function to generate ticking time from timer end datetime, stores value under timer's tickingTime attribute
+    timers[timer.name]["tickingTime"] = calculateTickingTime(timers[timer.name]);
+    console.log(timers[timer.name]["tickingTime"])
+
     // Calls displayTimer() so new timer will be displayed in the timer table
     displayTimer(timerNum, timer.name);
-
-    // FIXME: Workaround solution to store ticking time using the display time created by displayTimer()
-    // Will want to create function that calculates ticking time like displayTimer does now then call and store that
-    // then call modified displayTimer() with time we have stored in timer object. 
-    timers[timer.name]["tickingTime"] = getTimerDisplayTime(document.getElementById("timeDisplay" + String(timerNum)).innerHTML);
 
     // Increments timerNum so each timer's number is unique and so we can loop through timers later
     timerNum++;
@@ -124,6 +120,21 @@ function newTimer() {
     // doesn't cause data to get submitted to a nonexistant server, appended to our url, or cached/cookied. 
     // (I need to review storing user data and form submits cuz I only vaguely remember things)
     return false;
+}
+
+function calculateTickingTime(timer) {
+    // TODO: Clean up documentation for this function
+
+    const currentDateTime = new Date(Date.now());
+    console.log(currentDateTime);
+    // let timeTillOver = timers[timerName][1] - currentDateTime;
+    let timeTillOver = 60000;
+
+    // takes a rounded down amount of time from the total time to generate an accurate picture of how long in days, hours, mins, and secs
+    timeTillOver = divideUpTime(timeTillOver);
+    // console.log(formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]));
+
+    return timeTillOver
 }
 
 function getTimerDisplayTime(display) {
@@ -262,12 +273,20 @@ function tickTimers() {
 
         let isPositive = true;
 
-        // Iterate over each item in the array, isPositive is false if any element is negative
+        // Iterate over each item in the array, isPositive is false if any element is negative or all eleents are zeroes
         for (let j = 0; j < timeArray.length; j++ ) {
-            if (timeArray[j] <= 0) {
+            if (timeArray[j] > 0) {
+                // If we find a positive number then the array is positive
+                isPositive = true;
+                break;
+            } else if (timeArray[j] < 0) {
+                // If we find a single negative number then the array is negative
                 isPositive = false;
                 break;
             } else {
+                // If we have a zero value then we keep iterating, if no positive or negative values are found
+                // then we have all zeros which means we treat the time as negative
+                isPositive = false;
                 continue;
             }
         }
@@ -296,16 +315,7 @@ function formatDate(day, hr, min, s) {
 }
 
 function displayTimer(givenTimerNum, timerName) {
-    // TODO: Clean up documentation for this function
-
-    const currentDateTime = new Date(Date.now());
-    console.log(currentDateTime);
-    // let timeTillOver = timers[timerName][1] - currentDateTime;
-    let timeTillOver = 1000;
-
-    // takes a rounded down amount of time from the total time to generate an accurate picture of how long in days, hours, mins, and secs
-    timeTillOver = divideUpTime(timeTillOver);
-    // console.log(formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]));
+    timeTillOver = timers[timerName]["tickingTime"];
 
     //creates a new table row and gives it an id based on how many timer rows already exist
     const displayTable = document.getElementById("timersTable");
