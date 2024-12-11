@@ -1,10 +1,16 @@
-// Retrostorm        Started: 10/30/24      Updated: 11/26/24
+// Retrostorm        Started: 10/30/24      Updated: 12/10/24
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
 
 // TODO: Implement using tickingTime from timer objects when ticking timers
 // and other times when time is needed. 
+
+// TODO: Take positive time checking for loop from tickTimers() and make it its own function so can use
+// if want to alert user of a deadline reached.
+
+// TODO: Rewrite conditional statement in the negative tick function to match the style of the positive tick function.
+// It's so much cleaner and more intuitive. 
 
 // TODO: Change back displayTimer() when done debugging. 
 // displayTimer() will currently always give a display of 1 second,
@@ -196,30 +202,70 @@ function positiveTickTimer(timeArray) {
     let minutes = timeArray[2];
     let seconds = timeArray[3];
 
-    if (seconds - 1 < 0) {
-        seconds = 59;
-        if (minutes - 1 < 0) {
-            minutes = 59;
-            if (hours - 1 < 0) {
-                hours = 23;
-                if (days - 1 < 0) {
-                    console.log("Error: Somehow got fed 0days, 0hours, 0mins, 0seconds case.");
-                    days = 0;
-                    hours = 0;
-                    minutes = 0;
-                    seconds = -1;
-                } else {
-                    days--;
-                }
-            } else {
-                hours--;
-            }
-        } else {
-            minutes--;
-        }
-    } else {
+    // Decrement seconds
+    if (seconds - 1 >= 0) {
         seconds--;
+        return [days, hours, minutes, seconds]
     }
+
+    // Need to decrememnt minutes
+    seconds = 59;
+
+    if (minutes - 1 >= 0) {
+        minutes--;
+        return [days, hours, minutes, seconds]
+    }
+
+    // Need to decrement hours
+    minutes = 59;
+
+    if (hours - 1 >= 0) {
+        hours--;
+        return [days, hours, minutes, seconds]
+    }
+
+    // Need to decrement days
+    hours = 23;
+
+    if (days - 1 >= 0) {
+        days--;
+        return [days, hours, minutes, seconds]
+    }
+
+    // Following shouln't be reached since only called for positive numbers
+
+    console.log("Error: Somehow got fed 0days, 0hours, 0mins, 0seconds case.");
+    days = 0;
+    hours = 0;
+    minutes = 0;
+    seconds = -1;
+
+    // Old structure, new should achieve same as this nested mess
+
+    // if (seconds - 1 < 0) {
+    //     seconds = 59;
+    //     if (minutes - 1 < 0) {
+    //         minutes = 59;
+    //         if (hours - 1 < 0) {
+    //             hours = 23;
+    //             if (days - 1 < 0) {
+    //                 console.log("Error: Somehow got fed 0days, 0hours, 0mins, 0seconds case.");
+    //                 days = 0;
+    //                 hours = 0;
+    //                 minutes = 0;
+    //                 seconds = -1;
+    //             } else {
+    //                 days--;
+    //             }
+    //         } else {
+    //             hours--;
+    //         }
+    //     } else {
+    //         minutes--;
+    //     }
+    // } else {
+    //     seconds--;
+    // }
 
     return [days, hours, minutes, seconds]
 }
@@ -272,6 +318,10 @@ function tickTimers() {
         let timeArray = getTimerDisplayTime(innerDisplay);
 
         let isPositive = true;
+
+
+        // TODO: Make this it's own function called checkIfAllGreaterThanZero or checkIfTimePositive, mostly for readability
+        // but also may want to use later to alert user of deadline reached
 
         // Iterate over each item in the array, isPositive is false if any element is negative or all eleents are zeroes
         for (let j = 0; j < timeArray.length; j++ ) {
