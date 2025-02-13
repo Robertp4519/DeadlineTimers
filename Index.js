@@ -1,4 +1,4 @@
-// Retrostorm        Started: 10/30/24      Updated: 12/10/24
+// Retrostorm        Started: 10/30/24      Updated: 2/12/25
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
@@ -6,11 +6,7 @@
 // TODO: Implement using tickingTime from timer objects when ticking timers
 // and other times when time is needed. 
 
-// TODO: Take positive time checking for loop from tickTimers() and make it its own function so can use
-// if want to alert user of a deadline reached.
-
-// TODO: Rewrite conditional statement in the negative tick function to match the style of the positive tick function.
-// It's so much cleaner and more intuitive. 
+// TODO: Use checkIfTimePositive to alert user when a timer has reached zero. 
 
 // TODO: Change back displayTimer() when done debugging. 
 // displayTimer() will currently always give a display of 1 second,
@@ -46,22 +42,9 @@ function Timer(timerNum, startDateTime, endDateTime, timerLabel, timerArray = [0
 }
 
 function main() {
-    // TODO: Clean up the documentation on this function
-
-    // Calls function that ticks timers each second IE 1000 milliseconds
+    // Calls function that ticks timers each second
     setInterval(tickTimers, 1000);
 
-    // Deprecated code, could likely delete
-
-    //let started = false;
-    //while (started != true) {
-    //    let now = Date.now().toString();
-    //    if (now.at(-3) == "0") {
-    //        setInterval(tickTimers, 1000);
-    //        started = true;
-    //        console.log("STARTED!");
-    //    }
-    //}
 }
 
 function newTimer() {
@@ -114,7 +97,7 @@ function newTimer() {
     console.log(timers[timer.name]["tickingTime"])
 
     // Calls displayTimer() so new timer will be displayed in the timer table
-    displayTimer(timerNum, timer.name);
+    createDisplayTimer(timerNum, timer.name);
 
     // Increments timerNum so each timer's number is unique and so we can loop through timers later
     timerNum++;
@@ -140,7 +123,7 @@ function calculateTickingTime(timer) {
     timeTillOver = divideUpTime(timeTillOver);
     // console.log(formatDate(timeTillOver[0], timeTillOver[1], timeTillOver[2], timeTillOver[3]));
 
-    return timeTillOver
+    return timeTillOver;
 }
 
 function getTimerDisplayTime(display) {
@@ -189,7 +172,31 @@ function getTimerDisplayTime(display) {
     // Days will always be start of display string up to the index of d
     days = parseInt(days);
 
-    return [days, hours, minutes, seconds]
+    return [days, hours, minutes, seconds];
+}
+
+function checkIfTimePositive(timeArray) {
+    let isPositive = true;
+
+    // Iterate over each item in the array, isPositive is false if any element is negative or all eleents are zeroes
+    for (let j = 0; j < timeArray.length; j++ ) {
+        if (timeArray[j] > 0) {
+            // If we find a positive number then the array is positive
+            isPositive = true;
+            return isPositive;
+        } else if (timeArray[j] < 0) {
+            // If we find a single negative number then the array is negative
+            isPositive = false;
+            return isPositive;
+        } else {
+            // If we have a zero value then we keep iterating, if no positive or negative values are found
+            // then we have all zeros which means we treat the time as negative
+            isPositive = false;
+            continue;
+        }
+    }
+
+    return isPositive;
 }
 
 function positiveTickTimer(timeArray) {
@@ -205,7 +212,7 @@ function positiveTickTimer(timeArray) {
     // Decrement seconds
     if (seconds - 1 >= 0) {
         seconds--;
-        return [days, hours, minutes, seconds]
+        return [days, hours, minutes, seconds];
     }
 
     // Need to decrememnt minutes
@@ -213,7 +220,7 @@ function positiveTickTimer(timeArray) {
 
     if (minutes - 1 >= 0) {
         minutes--;
-        return [days, hours, minutes, seconds]
+        return [days, hours, minutes, seconds];
     }
 
     // Need to decrement hours
@@ -221,7 +228,7 @@ function positiveTickTimer(timeArray) {
 
     if (hours - 1 >= 0) {
         hours--;
-        return [days, hours, minutes, seconds]
+        return [days, hours, minutes, seconds];
     }
 
     // Need to decrement days
@@ -229,45 +236,17 @@ function positiveTickTimer(timeArray) {
 
     if (days - 1 >= 0) {
         days--;
-        return [days, hours, minutes, seconds]
+        return [days, hours, minutes, seconds];
     }
 
-    // Following shouln't be reached since only called for positive numbers
-
+    // Following shouldn't be reached since only called for positive numbers
     console.log("Error: Somehow got fed 0days, 0hours, 0mins, 0seconds case.");
     days = 0;
     hours = 0;
     minutes = 0;
     seconds = -1;
 
-    // Old structure, new should achieve same as this nested mess
-
-    // if (seconds - 1 < 0) {
-    //     seconds = 59;
-    //     if (minutes - 1 < 0) {
-    //         minutes = 59;
-    //         if (hours - 1 < 0) {
-    //             hours = 23;
-    //             if (days - 1 < 0) {
-    //                 console.log("Error: Somehow got fed 0days, 0hours, 0mins, 0seconds case.");
-    //                 days = 0;
-    //                 hours = 0;
-    //                 minutes = 0;
-    //                 seconds = -1;
-    //             } else {
-    //                 days--;
-    //             }
-    //         } else {
-    //             hours--;
-    //         }
-    //     } else {
-    //         minutes--;
-    //     }
-    // } else {
-    //     seconds--;
-    // }
-
-    return [days, hours, minutes, seconds]
+    return [days, hours, minutes, seconds];
 }
 
 function negativeTickTimer(timeArray) {
@@ -284,24 +263,33 @@ function negativeTickTimer(timeArray) {
     let seconds = timeArray[3];
     console.log(seconds)
 
-    if (seconds - 1 < -59) {
-        seconds = 0;
-        if (minutes - 1 < -59) {
-            minutes = 0;
-            if (hours - 1 < -23) {
-                hours = 0;
-                days--;
-            } else {
-                hours--;
-            }
-        } else {
-            minutes--;
-        }
-    } else {
+    // Decrement seconds
+    if (seconds - 1 >= -59) {
         seconds--;
+        return [days, hours, minutes, seconds];
     }
 
-    return [days, hours, minutes, seconds]
+    // Need to decrement minutes
+    seconds = 0;
+
+    if (minutes - 1 >= -59) {
+        minutes--;
+        return [days, hours, minutes, seconds];
+    }
+
+    // Need to decrement hours
+    minutes = 0;
+
+    if (hours - 1 >= -23) {
+        hours--;
+        return [days, hours, minutes, seconds];
+    }
+
+    // Need to decrement days
+    hours = 0;
+    days--;
+
+    return [days, hours, minutes, seconds];
 }
 
 function tickTimers() {
@@ -317,29 +305,11 @@ function tickTimers() {
         let innerDisplay = timeDisplay.innerHTML;
         let timeArray = getTimerDisplayTime(innerDisplay);
 
-        let isPositive = true;
+        // WIP code to use tickingTime to get timer time value instead of display time
+        // let timerName = "timer" + String(i);
+        // let timeArray = timers[timerName]["tickingTime"];
 
-
-        // TODO: Make this it's own function called checkIfAllGreaterThanZero or checkIfTimePositive, mostly for readability
-        // but also may want to use later to alert user of deadline reached
-
-        // Iterate over each item in the array, isPositive is false if any element is negative or all eleents are zeroes
-        for (let j = 0; j < timeArray.length; j++ ) {
-            if (timeArray[j] > 0) {
-                // If we find a positive number then the array is positive
-                isPositive = true;
-                break;
-            } else if (timeArray[j] < 0) {
-                // If we find a single negative number then the array is negative
-                isPositive = false;
-                break;
-            } else {
-                // If we have a zero value then we keep iterating, if no positive or negative values are found
-                // then we have all zeros which means we treat the time as negative
-                isPositive = false;
-                continue;
-            }
-        }
+        let isPositive = checkIfTimePositive(timeArray);
 
         if (isPositive) {
             timeArray = positiveTickTimer(timeArray);
@@ -361,10 +331,10 @@ function formatDate(day, hr, min, s) {
     // be day, hr, min if these == 1 otherwise use plural form
 
     // Returns #days, #hrs, #min, #s
-    return day.toString() + "days, " + hr.toString() + "hrs, " + min.toString() + "min, " + s.toString() + "s"
+    return day.toString() + "days, " + hr.toString() + "hrs, " + min.toString() + "min, " + s.toString() + "s";
 }
 
-function displayTimer(givenTimerNum, timerName) {
+function createDisplayTimer(givenTimerNum, timerName) {
     timeTillOver = timers[timerName]["tickingTime"];
 
     //creates a new table row and gives it an id based on how many timer rows already exist
@@ -406,5 +376,5 @@ function divideUpTime(millisecondTime) {
     }
 
     // Return array of our divided up time in descending order
-    return [tempDays, tempHours, tempMinutes, tempSeconds]
+    return [tempDays, tempHours, tempMinutes, tempSeconds];
 }
