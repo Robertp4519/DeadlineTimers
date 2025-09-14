@@ -1,4 +1,4 @@
-Author: Retrostorm          Updated: 11/1/24
+Author: Robert Palmer          Updated: 11/1/24
 
 Files for DeadlineTimers project. Goal is for user to be able to create timers with a given end date that are displayed and tick down until 
 that date. The idea for this was inspired by the various ways the game Frostpunk showed approaching quest/demand deadlines, and I created 
