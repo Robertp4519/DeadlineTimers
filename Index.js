@@ -1,4 +1,4 @@
-// Retrostorm        Started: 10/30/24      Updated: 2/12/25
+// Robert Palmer        Started: 10/30/24      Updated: 2/12/25
 // Index for DeadlineTimers project, rewritten to use dictionaries/objects for better storage
 // of user timers so rearrangement and reloading of timers is easier.
 // Also cleaned up the code a lot.
@@ -378,3 +378,4 @@ function divideUpTime(millisecondTime) {
     // Return array of our divided up time in descending order
     return [tempDays, tempHours, tempMinutes, tempSeconds];
 }
+
